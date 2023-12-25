@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import editUser from '../component/UserCenter/editUser.vue';
 import addVideo from '../component/UserCenter/addVideo.vue';
 import followings from '../component/UserCenter/followings.vue';
@@ -42,6 +42,9 @@ const currentComponent = ref('');
 const editComponent=(component)=>{
   currentComponent.value=component;
 }
+onMounted(()=>{
+  editComponent(editUser)
+})
 </script>
 
 

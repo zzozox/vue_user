@@ -21,10 +21,10 @@
         </el-form>
 
         <!-- User Buttons -->
-        <el-button v-if="!user" @click="router.push('/login')" type="text">登录</el-button>
-        <div v-if="user" class="user-info">
+        <el-button v-if="userId==null" @click="router.push('/login')" type="text">登录</el-button>
+        <div v-if="userId!=null" class="user-info">
           <el-button @click="router.push('/userCenter')" type="text" class="user-name">
-            {{ user.userName }}
+<!--            {{ user.userName }}-->个人中心
             <i class="el-icon-arrow-right"></i>
           </el-button>
 <!--          <img :src="user.iconUrl" alt="User Icon" class="user-icon">-->
@@ -40,8 +40,15 @@ import router from "@/router";
 import axios from 'axios';
 
 const user=ref({})
-user.value=sessionStorage.getItem('userInfo')
-
+const userId=ref(sessionStorage.getItem('userId'))
+const getUser=()=>{
+  axios.post(`/user/getUserById/${userId.value}`,{userId:userId.value}).then(response=>{
+    console.log(response.data)
+    user.value=response.data;
+  }).catch(error=>{
+    console.log(error.message);
+  })
+}
 const searchResults=ref([])
 // 搜索表单数据
 const formData = ref({
@@ -58,6 +65,10 @@ const handleSubmit = async () => {
     console.error('Error:', error);
   })
 };
+
+onMounted(()=>{
+  getUser();
+})
 </script>
 
 <style scoped>

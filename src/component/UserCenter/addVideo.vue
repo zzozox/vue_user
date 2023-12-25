@@ -42,6 +42,7 @@ import VideoUpload from "@/component/upload/videoUpload.vue";
 import axios from "axios";
 import { ref } from 'vue';
 
+const userId=ref(sessionStorage.getItem('userId'))
 const image=ref('')
 const video=ref('')
 const form = ref({
@@ -50,46 +51,92 @@ const form = ref({
   typeName: '',
 });
 //获取上传的图片的base64编码
-const handleImageUploaded = (base64Image) => {
-  image.value=base64Image;
-  console.log('接收到的图片Base64数据：',image.value)
+// const handleImageUploaded = (base64Image) => {
+//   image.value=base64Image;
+//   console.log('接收到的图片Base64数据：',image.value)
+// };
+// const uploadImg=()=>{
+//   axios.post('/video/uploadImage',{file:image.value}).then(res=>{
+//     if(res.data===200){
+//       Element.message('上传成功');
+//     }
+//   }).catch(error=>{
+//     console.log(error.message)
+//     Element.warning('上传失败')
+//   })
+// }
+// 获取上传的图片文件
+const handleImageUploaded = (imageFile) => {
+  image.value = imageFile;
+  console.log('接收到的图片文件：', image.value);
 };
-const uploadImg=()=>{
-  axios.post('/video/uploadImage',{file:image.value}).then(res=>{
-    if(res.data===200){
-      Element.message('上传成功')
-    }
-  }).catch(error=>{
-    console.log(error.message)
-    Element.warning('上传失败')
-  })
-}
-
-//获取上传的视频的base64编码
-const handleVideoUploaded = (base64Video) => {
-  video.value=base64Video;
-  console.log("接收到的视频 Base64 数据:", video.value);
+const uploadImg = () => {
+  let formData = new FormData();
+  formData.append('file', image.value);
+  axios.post('/video/uploadImage', formData
+  //     , {
+  //   headers: {
+  //     'Content-Type': 'multipart/form-data'
+  //   }
+  // }
+  ).then(res => {
+    ElMessage.success('上传成功');
+  }).catch(error => {
+    console.log(error.message);
+    // ElMessage.warning('上传失败');
+  });
 };
-const uploadVideo=()=>{
-  axios.post('/video/uploadVideo',{file:video.value}).then(res=>{
-    if(res.data===200){
-      Element.message('上传成功')
-    }
-  }).catch(error=>{
-    console.log(error.message)
-    Element.warning('上传失败')
-  })
-}
 
+
+//获取上传的视频
+// const handleVideoUploaded = (base64Video) => {
+//   video.value=base64Video;
+//   console.log("接收到的视频 Base64 数据:", video.value);
+// };
+//获取上传的视频文件
+const handleVideoUploaded = (videoFile) => {
+  video.value = videoFile;
+  console.log("接收到的视频文件:", video.value);
+};
+const uploadVideo = () => {
+  let formData = new FormData();
+  formData.append('file', video.value);
+
+  axios.post('/video/uploadVideo', formData,
+  //     {
+  //   headers: {
+  //     'Content-Type': 'multipart/form-data'
+  //   }
+  // }
+  ).then(res => {
+    ElMessage.success('上传成功');
+  }).catch(error => {
+    console.log(error.message);
+    // Element.warning('上传失败');
+  });
+};
+// const uploadVideo=()=>{
+//   axios.post('/video/uploadVideo',{file:video.value}).then(res=>{
+//     if(res.data===200){
+//       Element.message('上传成功')
+//     }
+//   }).catch(error=>{
+//     console.log(error.message)
+//     Element.warning('上传失败')
+//   })
+// }
 //处理视频信息提交:
 const handin=()=>{
-    axios.post('/video/uAddVideo', form.value).then(response=>{
-      if(response.data===200){
-        Element.message('上传视频信息成功')
-      }
-    }).catch (error=> {
+  let params = new URLSearchParams();
+  params.append('userId',userId.value );
+  params.append('videoTitle', form.value.videoTitle);
+  params.append('videoInfo', form.value.videoInfo);
+  params.append('typeName', form.value.typeName);
+  axios.post('/video/uAddVideo', params).then(response=>{
+      ElMessage.success('上传视频信息成功')
+  }).catch (error=> {
     console.log(error.message)
-    Element.warning('上传失败')
+    ElMessage.warning('上传失败')
   })
 }
 </script>

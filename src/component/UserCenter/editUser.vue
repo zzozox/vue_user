@@ -1,49 +1,44 @@
 <template>
   <div class="container">
-    <form @submit.prevent="submitForm" class="user-form">
+    <form class="user-form">
+      <img :src="'data:image/jpeg;base64,'+user.iconUrl" alt="Profile Image" />
       <image-upload @image-uploaded="handleImageUpload" class="image-preview">
-        <img :src="userImg" alt="Profile Image" />
+<!--        <img :src="user.iconUrl" alt="Profile Image" />-->
       </image-upload>
       <el-button @click="uploadImg">上传头像</el-button>
       <div class="input-group">
         <label for="userName">用户昵称</label>
-        <input id="userName" type="text" v-model="user.value.userName" required>
+        <input id="userName" type="text" v-model="user.userName" required>
       </div>
-<!--      <div class="input-group">-->
-<!--        <label for="prePassword">密码</label>-->
-<!--        <input id="prePassword" type="password" v-model="user.password" autocomplete="off">-->
-<!--      </div>-->
+      <div class="input-group">
+        <label for="prePassword">密码</label>
+        <input id="prePassword" type="password" v-model="user.password" autocomplete="off">
+      </div>
 <!--      <div class="input-group">-->
 <!--        <label for="password">确认密码</label>-->
 <!--        <input id="password" type="password" v-model="user.password" autocomplete="off">-->
 <!--      </div>-->
 
-<!--      <div class="input-group gender">-->
-<!--        <label>性别</label>-->
-<!--        <div>-->
-<!--          <input type="radio" id="male" v-model="user.userSex" value="男">-->
-<!--          <label for="male">男</label>-->
-<!--          <input type="radio" id="female" v-model="user.userSex" value="女">-->
-<!--          <label for="female">女</label>-->
-<!--        </div>-->
-<!--      </div>-->
-
-<!--      <div class="input-group">-->
-<!--        <label for="userAge">年龄</label>-->
-<!--        <input id="userAge" type="text" v-model="user.userAge" required autocomplete="off">-->
-<!--      </div>-->
-
-      <div class="input-group">
-        <label for="preEncryptedProblem">密保</label>
-        <input id="preEncryptedProblem" type="text" v-model="user.value.preEncryptedProblem" autocomplete="off">
+      <div class="input-group gender">
+        <label>性别</label>
+        <div>
+          <input type="radio" id="male" v-model="user.userSex" value="男">
+          <label for="male">男</label>
+          <input type="radio" id="female" v-model="user.userSex" value="女">
+          <label for="female">女</label>
+        </div>
       </div>
 
       <div class="input-group">
-        <label for="encryptedProblem">修改密保</label>
-        <input id="encryptedProblem" type="text" v-model="user.value.encryptedProblem" autocomplete="off">
+        <label for="userAge">年龄</label>
+        <input id="userAge" type="text" v-model="user.userAge" required autocomplete="off">
       </div>
       <div class="input-group">
-        <button type="submit">立即提交</button>
+        <label for="encryptedProblem">密保</label>
+        <input id="encryptedProblem" type="text" v-model="user.encryptedProblem" autocomplete="off">
+      </div>
+      <div class="input-group">
+        <el-button @click="submit">立即提交</el-button>
       </div>
     </form>
   </div>
@@ -52,44 +47,63 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import ImageUpload from "@/component/upload/imageUpload.vue";
-import Header from "@/component/Header.vue";
-import Footer from "@/component/Footer.vue";
 import axios from "axios";
 
-const userInfo = ref(localStorage.getItem('userInfo'));
-const userImg=ref('')
-
-user.value = {
-  preEncryptedProblem:'',
-  userId:userInfo.value.userId,
-  userName:'',
-  encryptedProblem:''
-}
-
-
-const submitForm = () => {
-  console.log('提交的表单数据:', user.value);
-  axios.post('/user/UEditorUser',user.value)
-};
-
-//获取上传的图片的base64编码,上传头像
-const handleImageUpload = (base64Image) => {
-  userImg.value=base64Image;
-  console.log('接收到的图片Base64数据：',userImg.value)
-};
-const uploadImg=()=>{
-  axios.post('/user/upload',{file:userImg.value}).then(res=>{
-    if(res.data===200){
-      Element.message('上传头像成功')
-    }
+const preEncryptedProblem=ref('')
+const user=ref({})
+const userId=ref(sessionStorage.getItem('userId'))
+const getUser=()=>{
+  axios.post(`/user/getUserById/${userId.value}`,{userId:userId.value}).then(response=>{
+    user.value=response.data;
+    preEncryptedProblem.value=user.value.encryptedProblem;
+    console.log('user.value',user.value)
+    changeImage();
   }).catch(error=>{
-    console.log(error.message)
-    Element.warning('上传头像失败')
+    console.log(error.message);
   })
 }
-// onMounted(() => {
-//
-// });
+const submit = () => {
+  console.log('提交的数据:', user.value);
+  axios.post('/user/UEditorUser',user.value).then(()=>{
+    ElMessage.success('修改个人信息成功')
+  })
+};
+
+
+// 获取上传的图片文件
+const image=ref('')
+const handleImageUpload = (imageFile) => {
+  image.value = imageFile;
+  console.log('接收到的图片文件：', image.value);
+};
+const uploadImg = () => {
+  let formData = new FormData();
+  formData.append('file', image.value);
+  formData.append('userId',userId.value)
+  axios.post('/user/upload', formData
+      //     , {
+      //   headers: {
+      //     'Content-Type': 'multipart/form-data'
+      //   }
+      // }
+  ).then(res => {
+    ElMessage.success('上传成功');
+  }).catch(error => {
+    console.log(error.message);
+    // ElMessage.warning('上传失败');
+  });
+};
+const changeImage=()=>{
+  axios.post(`/user/getIcon/${userId.value}`,{userId:userId.value}).then(response=>{
+    user.value.iconUrl=response.data.data;
+    console.log('user.value.iconUrl',user.value.iconUrl)
+  }).catch(error=>{
+    console.log(error.message)
+  })
+}
+onMounted(() => {
+  getUser();
+});
 </script>
 <style scoped>
 .container {

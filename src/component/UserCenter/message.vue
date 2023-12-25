@@ -1,13 +1,12 @@
 <template>
-  <Header></Header>
   <section class="message-center">
-    <h2 class="message-title">消息中心</h2>
+<!--    <h2 class="message-title">Messages</h2>-->
     <ul class="message-container">
-      <li class="message-item" v-for="(message, index) in messages" :key="index">
+      <li class="message-item" v-for="(message, index) in Messages" :key="index">
         <div class="message-content">
-          <h3 class="message-heading">{{ message.title }}</h3>
-          <time class="message-time">{{ message.time }}</time>
-          <p class="message-detail">{{ message.content }}</p>
+          <h3 class="message-heading">{{ message.msgTitle }}</h3>
+          <time class="message-time">{{ message.msgSendDate }}</time>
+          <p class="message-detail">{{ message.msgContext }}</p>
         </div>
         <button class="message-read">已读</button>
         <button class="message-delete" @click="deleteMessage(index)">
@@ -19,26 +18,32 @@
 </template>
 
 <script setup>
-import Header from "@/component/Header.vue";
-import {onMounted, ref} from 'vue';
 import axios from "axios";
-
-const messages = ref([
-  {
-    title: '系统提醒',
-    time: '2021-06-08 06:20:07',
-    content: '你好！你的主题为《肖生克的救赎》的视频审核通过。'
-  },
-]);
+import {ref,onMounted} from 'vue';
+const user=ref({})
+const userId=ref(sessionStorage.getItem('userId'))
+const getUser=()=>{
+  axios.post(`/user/getUserById/${userId.value}`,{userId:userId.value}).then(response=>{
+    user.value=response.data;
+  }).catch(error=>{
+    console.log(error.message);
+  })
+}
+//获取的全部是系统消息
+const Messages = ref([]);
 const getMessages=()=>{
-  axios.post('',{}).then(response=>{
-    messages.value=response.data;
+  let params = new URLSearchParams();
+  params.append('userId', userId.value);
+  params.append('msgTypeName', 'SystemMsg');
+  axios.post(`/message/getMsgListByType`,params).then(response=>{
+    Messages.value=response.data.data;
+    console.log(Messages.value)
   }).catch(error=>{
     console.log(error.message);
   })
 }
 const deleteMessage = (index) => {
-  messages.value.splice(index, 1);
+  Messages.value.splice(index, 1);
 };
 
 onMounted(()=>{

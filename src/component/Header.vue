@@ -1,0 +1,121 @@
+<template>
+  <el-header class="navbar">
+    <div class="navbar-container">
+      <!-- Logo -->
+      <h1><a href="/" class="navbar-brand">milimili</a></h1>
+
+      <!-- Spacer -->
+      <div class="spacer"></div>
+
+      <!-- Search Bar and User Section -->
+      <div class="search-and-user">
+
+        <!-- Search Bar -->
+        <el-form inline class="search-form" >
+          <el-input v-model="formData.videoTitle" placeholder="搜索" class="search-input" clearable autofocus>
+<!--            <template slot="append">-->
+<!--              <el-button type="primary" icon="el-icon-search" native-type="submit"></el-button>-->
+<!--            </template>-->
+          </el-input>
+          <el-button @click="handleSubmit">搜索</el-button>
+        </el-form>
+
+        <!-- User Buttons -->
+        <el-button v-if="!user" @click="router.push('/login')" type="text">登录</el-button>
+        <div v-if="user" class="user-info">
+          <el-button @click="router.push('/userCenter')" type="text" class="user-name">
+            {{ user.userName }}
+            <i class="el-icon-arrow-right"></i>
+          </el-button>
+<!--          <img :src="user.iconUrl" alt="User Icon" class="user-icon">-->
+        </div>
+      </div>
+    </div>
+  </el-header>
+</template>
+
+<script setup>
+import { onMounted,ref } from 'vue';
+import router from "@/router";
+import axios from 'axios';
+
+const user=ref({})
+user.value=sessionStorage.getItem('userInfo')
+
+const searchResults=ref([])
+// 搜索表单数据
+const formData = ref({
+  videoTitle: ''
+});
+// 处理表单提交
+const handleSubmit = async () => {
+    axios.post('/video/search', formData.value).then(response=>{
+      console.log('Success:', response.data.data);
+      searchResults.value=response.data
+      router.push({ path: '/searchResult', query: {searchResults:JSON.stringify(searchResults.value)} })
+      // 处理服务器响应
+    }).catch (error=>{
+    console.error('Error:', error);
+  })
+};
+</script>
+
+<style scoped>
+.navbar {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1;
+  height: 50px;
+  /* 增加左右内边距为 30px */
+  padding: 0 30px;
+}
+
+.navbar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  /* 限制内容宽度并居中 */
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.navbar-brand {
+  color: black;
+  text-decoration: none;
+  font-size: 1.25em;
+}
+
+.spacer {
+  flex-grow: 1;
+}
+
+.search-and-user {
+  display: flex;
+  align-items: center;
+}
+
+.search-form {
+  margin-right: 20px;
+}
+
+.search-input {
+  width: 200px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.user-name {
+  margin-right: 10px;
+  color: #666666;
+}
+
+.user-icon {
+  height: 40px;
+  width: 40px;
+  border-radius: 50%;
+}
+</style>

@@ -93,6 +93,7 @@ const video=ref({})
 const getVideo=()=>{
   axios.post(`/video/getVideoById/${videoId.value}`,{videoId:videoId.value}).then((res)=>{
     video.value=res.data;
+    console.log(video.value)
     //请求视频base64
     changeVideo();
     //请求视频主信息
@@ -157,7 +158,9 @@ const newComment = ref({
 const postComment = () => {
   let params = new URLSearchParams();
   params.append('userId',userId.value)
-  params.append('comment',newComment.value)
+  params.append('parentId',newComment.value.parentId)
+  params.append('videoId',newComment.value.videoId)
+  params.append('commentInfo',newComment.value.commentInfo)
   axios.post('/comment/sendComment',params).then(res=>{
     ElMessage.success('发送成功')
     listComments();
@@ -210,7 +213,7 @@ onMounted(()=>{
   console.log(videoId.value)
   getUser();
   getVideo();
-
+  getVideoUser();
   listComments();
 })
 </script>

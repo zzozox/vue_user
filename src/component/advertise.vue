@@ -28,7 +28,7 @@ onMounted(()=>{
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); /* 添加阴影效果 */
   border-radius: 10px; /* 圆角边框 */
   overflow: hidden; /* 确保图片圆角 */
-  margin: 10px; /* 添加外边距 */
+  margin: 200px; /* 添加外边距，让广告距离屏幕边界有一定距离 */
   transition: transform 0.3s ease-in-out; /* 平滑的过渡效果 */
 }
 
@@ -42,3 +42,4 @@ onMounted(()=>{
   transform: scale(1.05); /* 鼠标悬停时放大 */
 }
 </style>
+

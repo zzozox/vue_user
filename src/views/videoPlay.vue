@@ -141,7 +141,8 @@ onMounted(()=>{
   console.log(videoId.value)
   getDanmu();
 
-  getUser();
+  //getUser写到getVideoUser成功里面
+  // getUser();
   getVideo();
   getVideoUser();
   listComments();
@@ -154,7 +155,6 @@ function openDanmu(){
 }
 //以上是弹幕相关和onmonted
 import Header from "@/component/Header.vue";
-import Scrolling from "@/component/videoPlay/scrolling.vue";
 import {onMounted, ref, toRaw,computed} from 'vue';
 import axios from "axios";
 import {useRoute} from "vue-router";
@@ -194,6 +194,7 @@ const getVideoUser=()=>{
     }).catch(error=>{
       console.log(error.message)
     })
+    getUser()
   }).catch(error=>{
     console.log(error.message);
   })

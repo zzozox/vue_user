@@ -2,7 +2,7 @@
   <Header></Header>
 <!--  <slider-video></slider-video>-->
 <!--  <popular-video></popular-video>-->
-<!--  <recent-video></recent-video>-->
+  <recent-video></recent-video>
   <all-video></all-video>
   <Footer></Footer>
 </template>

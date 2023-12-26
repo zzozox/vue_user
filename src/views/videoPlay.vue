@@ -5,21 +5,42 @@
       <el-col :span="16" class="left-section">
 
         <div class="video-container">
-          <video
-              :src="'data:video/mp4;base64,' + video.videoUrl"
-              class="video-player"
-              controls>
-          </video>
+          <video :src="'data:video/mp4;base64,' + video.videoUrl" class="video-player" controls></video>
         </div>
-        <div class="danmaku-section">
-          <scrolling></scrolling>
+
+        <div class="container-fluid custom-container">
+          <div class="row">
+            <div class="col-12 mb-3">
+              <div class="row g-2">
+                <div class="col-sm-9 col-8">
+                  <input
+                      type="text"
+                      class="form-control custom-input"
+                      placeholder="请输入弹幕内容"
+                      v-model="newComment.commentInfo"
+                  />
+                </div>
+                <div class="col-sm-3 col-4">
+                  <button
+                      type="button"
+                      class="btn btn-primary btn-sm w-100 custom-button"
+                      title="弹幕"
+                      @click="postComment"
+                  >
+                    发布弹幕
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </el-col>
 
       <el-col :span="8" class="right-section">
         <el-card class="video-info">
-          <p>名称：{{ videoUser.username }}</p>
-          <!-- 其他用户信息 -->
+          <img :src="'data:image/jpeg;base64,'+videoUser.iconUrl" alt="User Image" />
+          <p>名称：{{ videoUser.userName }}</p>
+          <el-button @click="focusing">关注</el-button>
         </el-card>
         <el-card class="video-info">
           <template #header>
@@ -42,7 +63,12 @@
         </el-input>
         <el-button type="primary" @click="postComment">评论</el-button>
         <div v-for="comment in comments" :key="comment.id" class="comment-item">
-          <!-- 评论内容 -->
+          <img :src="'data:image/jpeg;base64,'+comment.userUrl" alt="User Image" />
+          <div class="comment-content">
+            <span class="username">{{comment.username}}</span>
+            <span class="commentInfo">{{comment.commentInfo}}</span>
+            <span class="commentDate">{{comment.commentDate}}</span>
+          </div>
         </div>
       </div>
     </el-footer>
@@ -52,9 +78,11 @@
 <script setup>
 import Header from "@/component/Header.vue";
 import Scrolling from "@/component/videoPlay/scrolling.vue";
-import {onMounted, ref, toRaw} from 'vue';
+import {onMounted, ref, toRaw,computed} from 'vue';
+import vueDanmaku from 'vue3-danmaku';
 import axios from "axios";
 import {useRoute} from "vue-router";
+import {ElMessage} from "element-plus";
 const route=useRoute();
 //视频获取
 const videoId=ref(route.query.videoId)
@@ -62,7 +90,6 @@ const video=ref({})
 const getVideo=()=>{
   axios.post(`/video/getVideoById/${videoId.value}`,{videoId:videoId.value}).then((res)=>{
     video.value=res.data;
-    console.log(' video.value',video.value)
     //请求视频base64
     changeVideo();
     //请求视频主信息
@@ -74,7 +101,6 @@ const getVideo=()=>{
 const changeVideo=()=>{
   axios.post(`/video/videoPlay/${videoId.value}`,{videoId:videoId.value}).then(response=>{
     video.value.videoUrl=response.data.data;
-    // console.log('video.value.videoUrl',video.value.videoUrl)
   }).catch(error=>{
     console.log(error.message);
   })
@@ -85,7 +111,12 @@ const getVideoUser=()=>{
   console.log(' video.value.userId', video.value.userId)
   axios.post(`/user/getUserById/${video.value.userId}`,{userId:video.value.userId}).then(response=>{
     videoUser.value=response.data;
-    console.log(' videoUser.value', videoUser.value)
+    axios.post(`/user/getIcon/${video.value.userId}`,{userId:video.value.userId}).then(response=>{
+      videoUser.iconUrl=response.data.data;
+      console.log('videoUser.userUrl', videoUser.iconUrl)
+    }).catch(error=>{
+      console.log(error.message)
+    })
   }).catch(error=>{
     console.log(error.message);
   })
@@ -97,6 +128,12 @@ const userId=ref(sessionStorage.getItem('userId'))
 const getUser=()=>{
   axios.post(`/user/getUserById/${userId.value}`,{userId:userId.value}).then(response=>{
     user.value=response.data.data;
+    axios.post(`/user/getIcon/${userId.value}`,{userId:userId.value}).then(response=>{
+      user.iconUrl=response.data.data;
+      console.log('user.userUrl', user.iconUrl)
+    }).catch(error=>{
+      console.log(error.message)
+    })
   }).catch(error=>{
     console.log(error.message);
   })
@@ -104,15 +141,23 @@ const getUser=()=>{
 
 // 发布新评论的逻辑
 const newComment = ref({
+  id:0,
+  userId:userId.value,
+  videoId:videoId.value,
+  commentDate:'',
   commentInfo:'',
-  parentId:1,
-  videoId:videoId.value
+  parentId:0,
+  userName:user.value.username,
+  userUrl:user.value.iconUrl,
+  replies:null
 });
 const postComment = () => {
-  axios.post('/comment/sendComment',newComment.value).then(res=>{
-    if(res.data===200){
-      listComments();
-    }
+  let params = new URLSearchParams();
+  params.append('userId',userId.value)
+  params.append('comment',newComment.value)
+  axios.post('/comment/sendComment',params).then(res=>{
+    ElMessage.success('发送成功')
+    listComments();
   }).catch(error=>{
     console.log(error.message)
   })
@@ -122,7 +167,20 @@ const comments = ref([]);
 const listComments=()=>{
   axios.post(`/comment/listCommentByVideoId/${videoId.value}`,{videoId:videoId.value}).then(res=>{
     comments.value=res.data;
-    console.log('comments:',res.data)
+    console.log('comments:',comments.value)
+    for (const item of comments.value){
+      console.log(item)
+      changeImage(item);
+    }
+  }).catch(error=>{
+    console.log(error.message)
+  })
+}
+//用户头像
+const changeImage=(item)=>{
+  axios.post(`/user/getIcon/${item.userId}`,{userId:item.userId}).then(response=>{
+    item.userUrl=response.data.data;
+    console.log('item.userUrl',item.userUrl)
   }).catch(error=>{
     console.log(error.message)
   })
@@ -132,12 +190,24 @@ const listComments=()=>{
 const replyToComment = (commentId) => {
 
 };
-
+//关注
+const focusing=()=>{
+  let params = new URLSearchParams();
+  params.append('fanId',userId.value)
+  params.append('focusedId',videoUser.value.userId)
+  axios.post("/focus/focusUser",params).then(()=>{
+    ElMessage.success("关注成功")
+  }).catch(error=>{
+    console.log(error.message)
+  })
+}
+//弹幕滚动
 
 onMounted(()=>{
+  console.log(videoId.value)
   getUser();
   getVideo();
-  console.log(videoId.value)
+
   listComments();
 })
 </script>
@@ -155,18 +225,28 @@ onMounted(()=>{
 }
 
 .video-container {
+  position: relative;
   flex-grow: 1;
-  /* 视频容器样式 */
 }
 
 .video-player {
   width: 100%;
-  max-height: calc(100vh - 200px); /* 假设用户信息和弹幕区域高度总和为200px */
-  /* 视频播放器样式，如控制尺寸等 */
+  max-height: calc(100vh - 200px);
 }
 
-.danmaku-section {
-  /* 弹幕区域样式 */
+.barrage-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.barrage {
+  position: absolute;
+  left: 100%;
+  white-space: nowrap;
 }
 
 .video-info {
@@ -211,6 +291,59 @@ onMounted(()=>{
   .comment-input {
     width: 100%; /* 小屏幕上，输入框占满整个宽度 */
   }
+}
+.comment-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.comment-item img {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  margin-right: 10px;
+}
+
+.comment-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.comment-content .username {
+  font-weight: bold; /* 使用户名更突出 */
+}
+
+.comment-content .commentInfo {
+  margin-top: 5px;
+}
+
+.comment-content .commentDate {
+  margin-top: 5px;
+  color: #999;
+}
+.custom-container {
+  max-width: 100%;
+}
+
+.custom-input {
+  border: 1px solid #ced4da;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  font-family: 'Arial', sans-serif;
+}
+
+.custom-button {
+  background-color: #91c494;
+  border-radius: 5px;
+  font-family: 'Arial', sans-serif;
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.custom-button:hover {
+  background-color: #3a8a3e;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 </style>

@@ -1,18 +1,15 @@
 <template>
-  <div class="popular-videos">
+  <div class="recent-videos">
     <div class="container">
-      <h3 class="title">最受欢迎</h3>
+      <h3 class="section-title">最受欢迎</h3>
       <ul class="video-list">
-        <li v-for="item in popularVideoArray" class="video-item" :key="item.videoId">
-          <div class="video-box">
-            <figure>
-              <img :src="item.thunmbnailUrl" :alt="item.videoTitle" class="video-image">
-            </figure>
-            <div class="video-info">
-              <h3 class="video-title">{{ item.videoTitle }}</h3>
-              <span class="fa fa-clock-o video-icon"></span>
-              <span class="fa fa-heart video-icon"></span>
-            </div>
+        <li v-for="item in recentVideoArray" class="video-item" :key="item.videoId">
+          <div class="video-content">
+
+            <img class="video-image" :src="'data:image/jpeg;base64,'+item.thunmbnailUrl" :alt="item.videoTitle">
+            <figcaption class="video-title">{{ item.videoTitle }}</figcaption>
+
+            <p class="video-info">{{ item.videoInfo }}</p>
             <el-button class="watch-button" @click="toVideoPlay(item)">现在观看</el-button>
           </div>
         </li>
@@ -22,39 +19,44 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted ,toRaw} from 'vue';
 import axios from "axios";
 import router from "@/router";
 
-const popularVideoArray = ref([]);
-
+const recentVideoArray = ref([]);
 const toVideoPlay = (item) => {
-  router.push({ path: '/videoPlay', query: { videoId: item.videoId } });
+  router.push({ path: '/videoPlay', query: {videoId:item.videoId } });
 };
 
 onMounted(() => {
   axios.get('/video/getIndexRecommendVideo').then(response => {
-    popularVideoArray.value = response.data;
-    for (const item in popularVideoArray.value){
-      axios.post(`/video/getVideoImage/${item.videoId}`,{videoId:item.videoId}).then(response=>{
-        item.thunmbnailUrl=response.data;
-      }).catch(error=>{
-        console.error(error.message);
-      })}
+    recentVideoArray.value = response.data.data;
+    for (const item of recentVideoArray.value){
+      console.log(toRaw(item))
+      changeImg(item);
+    }
   }).catch(error => {
     console.log(error.message);
   });
 });
+const changeImg=(item)=>{
+  console.log('item.videoId:',item.videoId)
+  axios.post(`/video/getVideoImage/${item.videoId}`,{videoId:item.videoId}).then(response=>{
+    item.thunmbnailUrl=response.data.data;
+  }).catch(error=>{
+    console.error(error.message);
+  })
+}
 </script>
 
 <style scoped>
-.popular-videos .container {
+.recent-videos .container {
   max-width: 1200px;
   margin: auto;
   padding: 20px;
 }
 
-.title {
+.section-title {
   text-align: center;
   margin-bottom: 20px;
   font-size: 24px;
@@ -77,7 +79,7 @@ onMounted(() => {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.video-box {
+.video-content {
   padding: 15px;
   text-align: center;
 }

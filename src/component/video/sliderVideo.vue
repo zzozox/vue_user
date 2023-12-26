@@ -1,74 +1,46 @@
 <template>
-  <div v-if="user" class="swiper-container">
-    <swiper :options="swiperOptions">
-      <swiper-slide v-for="item in sliderVideos" :key="item.videoId">
-        <div class="slider-info" :element-loading-background="'data:image/jpeg;base64,'+item.thunmbnailUrl">
-          <div class="banner-info">
-            <h3>最近上线视频</h3>
-            <p class="over-para">{{ item.description }}</p>
-            <a @click="playVideo(item)" class="play-view">
-              <span class="video-play-icon">
-                <span class="fa fa-play"></span>
-              </span>
-              <h6>现在观看</h6>
-            </a>
+  <div class="recent-videos">
+    <div class="container">
+      <h3 class="section-title">推荐视频</h3>
+      <ul class="video-list">
+        <li v-for="item in recentVideoArray" class="video-item" :key="item.videoId">
+          <div class="video-content">
+
+            <img class="video-image" :src="'data:image/jpeg;base64,'+item.thunmbnailUrl" :alt="item.videoTitle">
+            <figcaption class="video-title">{{ item.videoTitle }}</figcaption>
+
+            <p class="video-info">{{ item.videoInfo }}</p>
+            <el-button class="watch-button" @click="toVideoPlay(item)">现在观看</el-button>
           </div>
-        </div>
-      </swiper-slide>
-    </swiper>
-    <!-- Swiper的导航按钮 -->
-    <div class="swiper-button-prev"></div>
-    <div class="swiper-button-next"></div>
-    <div class="swiper-pagination"></div>
+        </li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import axios from 'axios';
-import router from '@/router';
-import { Swiper, SwiperSlide } from 'swiper/vue';
-import SwiperCore, { Navigation, Pagination } from 'swiper';
-import 'swiper/swiper-bundle.css';
+import { ref, onMounted ,toRaw} from 'vue';
+import axios from "axios";
+import router from "@/router";
 
-// Swiper组件需要的模块
-SwiperCore.use([Navigation, Pagination]);
-
-const user=ref(localStorage.getItem('userInfo'))
-const sliderVideos = ref([]);
-
-const swiperOptions = ref({
-  slidesPerView: 3,
-  spaceBetween: 30,
-  navigation: {
-    nextEl: '.swiper-button-next',
-    prevEl: '.swiper-button-prev',
-  },
-  pagination: {
-    el: '.swiper-pagination',
-    clickable: true,
-  },
-});
-
-const playVideo = (item) => {
-  // 根据视频ID播放视频，可以跳转到视频播放页面或者实现一个弹窗播放器
-  router.push({ path: '/videoPlay', query: { item } });
+const userId=ref()
+userId.value=sessionStorage.getItem("userId")
+const recentVideoArray = ref([]);
+const toVideoPlay = (item) => {
+  router.push({ path: '/videoPlay', query: {videoId:item.videoId } });
 };
 
 onMounted(() => {
-  getSlider();
-});
-const getSlider=()=>{
-  // 获取轮播视频数据
-  axios.post('/video/getVideoListByUserId',{userId:user.value.userId}).then(response => {
-    sliderVideos.value = response.data;
-    for (const item of sliderVideos.value){
+  axios.post(`/video/getRecommendVideo/${userId}`).then(response => {
+    recentVideoArray.value = response.data.data;
+    for (const item of recentVideoArray.value){
+      console.log(toRaw(item))
       changeImg(item);
-      }
+    }
   }).catch(error => {
-    console.error(error.message);
+    console.log(error.message);
   });
-}
+});
 const changeImg=(item)=>{
   console.log('item.videoId:',item.videoId)
   axios.post(`/video/getVideoImage/${item.videoId}`,{videoId:item.videoId}).then(response=>{
@@ -79,65 +51,77 @@ const changeImg=(item)=>{
 }
 </script>
 
-
 <style scoped>
-.swiper-container {
-  width: 100%;
-  height: 300px;
+.recent-videos .container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 20px;
 }
 
-.swiper-slide {
-  background-position: center;
-  background-size: cover;
-  width: 300px;
-  height: 100%;
-}
-
-.slider-info {
-  position: relative;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.banner-info {
+.section-title {
   text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  color: #333;
+}
+
+.video-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  list-style-type: none;
+  padding: 0;
+}
+
+.video-item {
+  flex: 1 1 300px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.video-content {
+  padding: 15px;
+  text-align: center;
+}
+
+.video-image {
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.video-title {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.video-info {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.watch-button {
+  border: none;
+  background-color: #91c494;
   color: white;
+  padding: 8px 16px;
+  border-radius: 4px;
 }
 
-.over-para {
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 10px;
-  border-radius: 5px;
+.watch-button:hover {
+  background-color: #3a8a3e;
 }
 
-.play-view {
-  display: inline-block;
-  margin-top: 10px;
-  background-color: #ff5722;
-  color: white;
-  padding: 10px 20px;
-  border-radius: 20px;
-  cursor: pointer;
-}
+@media (max-width: 768px) {
+  .video-list {
+    flex-direction: column;
+  }
 
-.play-view:hover {
-  background-color: #e64a19;
-}
-
-.video-play-icon {
-  margin-right: 5px;
-}
-
-.swiper-button-prev,
-.swiper-button-next {
-  color: white;
-  width: 30px;
-  height: 30px;
-}
-
-.swiper-pagination {
-  bottom: 10px;
+  .video-item {
+    flex-basis: 100%;
+  }
 }
 </style>

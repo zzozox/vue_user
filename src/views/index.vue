@@ -3,6 +3,7 @@
 <!--  <slider-video></slider-video>-->
 <!--  <popular-video></popular-video>-->
   <recent-video></recent-video>
+  <advertise></advertise>
   <all-video></all-video>
   <Footer></Footer>
 </template>
@@ -12,8 +13,7 @@ import Header from "@/component/Header.vue";
 import Footer from "@/component/Footer.vue";
 import AllVideo from "@/component/video/allVideo.vue";
 import RecentVideo from "@/component/video/recentVideo.vue";
-import PopularVideo from "@/component/video/popularVideo.vue";
-import { ref, onMounted, onUnmounted } from 'vue';
+import Advertise from "@/component/advertise.vue";
 </script>
 
 <style scoped>

@@ -7,8 +7,8 @@
           <el-button class="category-btn" @click="loadAll">查看全部<i class="fa fa-hand-o-down"></i></el-button>
           <div class="video-type-selector">
             <label>按类型：</label>
-            <el-button v-for="type in videoTypes" @click="loadByType(type.id)" class="category-btn" :key="type.id">
-              {{ type.name }}
+            <el-button v-for="item in videoTypes" @click="loadByType(item.id)" class="category-btn" :key="item.id">
+              {{ item.name }}
             </el-button>
           </div>
         </div>
@@ -51,7 +51,9 @@ const videoTypes = ref(
       { id: 8, name: '娱乐' },
       { id: 9, name: '科技数码' },
       { id: 10, name: '体育' },
+      { id: 11, name: '美食' },
       { id: 12, name: '国漫' },
+      { id: 13, name: '音乐' },
     ]
 )
 
@@ -70,7 +72,7 @@ const loadAll=()=>{
   });
 }
 const loadByType=(typeId)=>{
-  axios.post('/video/getVideoByType',{videoTypeId:typeId}).then(response=>{
+  axios.post(`/video/getVideoByType/${typeId}`,{videoTypeId:typeId}).then(response=>{
     allVideoArray.value=response.data;
     for (const item of allVideoArray.value){
       changeImg(item);

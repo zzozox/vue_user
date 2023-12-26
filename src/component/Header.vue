@@ -12,7 +12,7 @@
 
         <!-- Search Bar -->
         <el-form inline class="search-form" >
-          <el-input v-model="formData.videoTitle" placeholder="搜索" class="search-input" clearable autofocus>
+          <el-input v-model="videoTitle" placeholder="搜索" class="search-input">
 <!--            <template slot="append">-->
 <!--              <el-button type="primary" icon="el-icon-search" native-type="submit"></el-button>-->
 <!--            </template>-->
@@ -24,7 +24,7 @@
         <el-button v-if="userId==null" @click="router.push('/login')" type="text">登录</el-button>
         <div v-if="userId!=null" class="user-info">
           <el-button @click="router.push('/userCenter')" type="text" class="user-name">
-<!--            {{ user.userName }}-->个人中心
+            {{ user.userName }}
             <i class="el-icon-arrow-right"></i>
           </el-button>
 <!--          <img :src="user.iconUrl" alt="User Icon" class="user-icon">-->
@@ -51,19 +51,11 @@ const getUser=()=>{
 }
 const searchResults=ref([])
 // 搜索表单数据
-const formData = ref({
-  videoTitle: ''
-});
+const videoTitle = ref('')
+
 // 处理表单提交
 const handleSubmit = async () => {
-    axios.post('/video/search', formData.value).then(response=>{
-      console.log('Success:', response.data.data);
-      searchResults.value=response.data
-      router.push({ path: '/searchResult', query: {searchResults:JSON.stringify(searchResults.value)} })
-      // 处理服务器响应
-    }).catch (error=>{
-    console.error('Error:', error);
-  })
+  router.push({ path: '/searchResult', query: {videoTitle:videoTitle.value} })
 };
 
 onMounted(()=>{

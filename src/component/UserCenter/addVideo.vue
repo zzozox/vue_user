@@ -24,6 +24,8 @@
           <option value="娱乐">娱乐</option>
           <option value="科技数码">科技数码</option>
           <option value="体育">体育</option>
+          <option value="美食">美食</option>
+          <option value="音乐">音乐</option>
           <option value="国漫">国漫</option>
         </select>
       </div>
@@ -41,6 +43,7 @@ import ImageUpload from "@/component/upload/imageUpload.vue";
 import VideoUpload from "@/component/upload/videoUpload.vue";
 import axios from "axios";
 import { ref } from 'vue';
+import {Open} from "@element-plus/icons-vue";
 
 const userId=ref(sessionStorage.getItem('userId'))
 const image=ref('')

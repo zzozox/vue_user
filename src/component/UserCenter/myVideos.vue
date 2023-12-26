@@ -48,7 +48,7 @@ onMounted(()=>{
   getMyVideo();
 })
 const toVideoPlay = (item) => {
-  router.push({ path: '/videoPlay', query: {video:JSON.stringify(toRaw(item)) } });
+  router.push({ path: '/videoPlay', query: {videoId:item.videoId } });
 };
 </script>
 

@@ -38,9 +38,10 @@
 
       <el-col :span="8" class="right-section">
         <el-card class="video-info">
-          <img :src="'data:image/jpeg;base64,'+videoUser.iconUrl" alt="User Image" />
+<!--          <img :src="'data:image/jpeg;base64,'+videoUser.iconUrl" alt="Profile Image" />-->
           <p>名称：{{ videoUser.userName }}</p>
-          <el-button @click="focusing">关注</el-button>
+          <el-button v-show="!user.userId!==video.userId" @click="focusing">关注</el-button>
+          <p>粉丝：{{videoUser.fanNum}}</p>
         </el-card>
         <el-card class="video-info">
           <template #header>
@@ -48,6 +49,8 @@
           </template>
           <p>名称：{{ video.videoTitle }}</p>
           <p>描述：{{video.videoInfo}}</p>
+          <p>观看量：{{video.viewNum}}</p>
+          <p>上传日期：{{video.editDate}}</p>
         </el-card>
       </el-col>
     </el-row>
@@ -113,7 +116,7 @@ const getVideoUser=()=>{
     videoUser.value=response.data;
     axios.post(`/user/getIcon/${video.value.userId}`,{userId:video.value.userId}).then(response=>{
       videoUser.iconUrl=response.data.data;
-      console.log('videoUser.userUrl', videoUser.iconUrl)
+      console.log('videoUser.iconUrl', videoUser.iconUrl)
     }).catch(error=>{
       console.log(error.message)
     })
@@ -130,7 +133,7 @@ const getUser=()=>{
     user.value=response.data.data;
     axios.post(`/user/getIcon/${userId.value}`,{userId:userId.value}).then(response=>{
       user.iconUrl=response.data.data;
-      console.log('user.userUrl', user.iconUrl)
+      console.log('user.iconUrl', user.iconUrl)
     }).catch(error=>{
       console.log(error.message)
     })

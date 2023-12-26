@@ -63,6 +63,7 @@ const submitLogin = () => {
           // 假设 response.data.data 包含用户信息
           // sessionStorage.setItem('userInfo', JSON.stringify(response.data.data));
           sessionStorage.setItem('userId', response.data.data.userId);
+          sessionStorage.setItem('userName', response.data.data.userName);
           console.log(response.data.data.userId)
           ElMessage.success('登录成功');
           router.push('/');

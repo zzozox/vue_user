@@ -7,6 +7,17 @@
         <div class="video-container">
           <video :src="'data:video/mp4;base64,' + video.videoUrl" class="video-player" controls></video>
         </div>
+        <!--        弹幕窗口-->
+        <div style="z-index: 2;position: absolute;top: 0;width: 66%;height:30%">
+          <vue-danmaku ref="danmakuRef"
+                       :speeds=80 :channels=3
+                       randomChannel
+                       :right=800 :top=60
+                       :danmus="danmusArr" loop style="height:300px;">
+
+          </vue-danmaku>
+
+        </div>
 
         <div class="container-fluid custom-container">
           <div class="row">
@@ -17,7 +28,7 @@
                       type="text"
                       class="form-control custom-input"
                       placeholder="请输入弹幕内容"
-                      v-model="newComment.commentInfo"
+                      v-model="danmuInfo"
                   />
                 </div>
                 <div class="col-sm-3 col-4">
@@ -25,9 +36,19 @@
                       type="button"
                       class="btn btn-primary btn-sm w-100 custom-button"
                       title="弹幕"
-                      @click="postComment"
-                  >
-                    发布弹幕
+                      @click="sendDanmu">发送弹幕
+                  </button>
+                  <button
+                      type="button"
+                      class="btn btn-primary btn-sm w-100 custom-button"
+                      title="弹幕"
+                      @click="closeDanmu">关弹幕
+                  </button>
+                  <button
+                      type="button"
+                      class="btn btn-primary btn-sm w-100 custom-button"
+                      title="弹幕"
+                      @click="openDanmu">开弹幕
                   </button>
                 </div>
               </div>
@@ -38,7 +59,7 @@
 
       <el-col :span="8" class="right-section">
         <el-card class="video-info">
-<!--          <img :src="'data:image/jpeg;base64,'+videoUser.iconUrl" alt="Profile Image" />-->
+          <!--          <img :src="'data:image/jpeg;base64,'+videoUser.iconUrl" alt="Profile Image" />-->
           <p>名称：{{ videoUser.userName }}</p>
           <el-button v-show="!user.userId!==video.userId" @click="focusing">关注</el-button>
           <p>粉丝：{{videoUser.fanNum}}</p>
@@ -79,10 +100,62 @@
 </template>
 
 <script setup>
+//弹幕相关
+import qs from "qs";
+import vueDanmaku from 'vue3-danmaku'
+const danmakuRef = ref(null)
+const userName =ref('')
+const danmuInfo=ref('')
+function sendDanmu(){//弹幕窗口发送弹幕方法
+  danmakuRef.value.add(danmuInfo.value)//发到前端界面展示 有时间延迟
+  axios.post('/danmu/sendDanmu',qs.stringify({//发到后端
+    videoId:videoId.value,
+    userName:userName.value,
+    danmuInfo:danmuInfo.value
+  })).catch(error => {
+    console.error(error);
+  });
+  danmuInfo.value = '';
+}
+
+const danmusArr = ref([])
+//如果报错 可能是因为数据库没值  多加几条  进入播放界面后会自动滚弹幕
+function getDanmu(){
+  axios.post('danmu/getDanmuByVideoId',qs.stringify({
+    videoId:videoId.value
+  })).then(response => {
+    danmusArr.value = response.data.data;
+    console.log("danmusArr.value", danmusArr.value);
+
+  }).catch(error => {
+    console.error(error);
+  });
+}
+
+onMounted(()=>{
+  userId.value=sessionStorage.getItem('userId')
+  userName.value=sessionStorage.getItem('userName')
+  console.log("videoId.value:", videoId.value);
+  console.log("user.value.name:", userName.value);
+  console.log("danmuInfo.value:", danmuInfo.value);
+  console.log(videoId.value)
+  getDanmu();
+
+  getUser();
+  getVideo();
+  getVideoUser();
+  listComments();
+})
+function closeDanmu(){
+  danmakuRef.value.hide()
+}
+function openDanmu(){
+  danmakuRef.value.show()
+}
+//以上是弹幕相关和onmonted
 import Header from "@/component/Header.vue";
 import Scrolling from "@/component/videoPlay/scrolling.vue";
 import {onMounted, ref, toRaw,computed} from 'vue';
-import vueDanmaku from 'vue3-danmaku';
 import axios from "axios";
 import {useRoute} from "vue-router";
 import {ElMessage} from "element-plus";
@@ -128,7 +201,7 @@ const getVideoUser=()=>{
 
 //登录用户获取
 const user=ref({})
-const userId=ref(sessionStorage.getItem('userId'))
+const userId=ref('')
 const getUser=()=>{
   axios.post(`/user/getUserById/${userId.value}`,{userId:userId.value}).then(response=>{
     user.value=response.data.data;
@@ -208,14 +281,6 @@ const focusing=()=>{
   })
 }
 //弹幕滚动
-
-onMounted(()=>{
-  console.log(videoId.value)
-  getUser();
-  getVideo();
-  getVideoUser();
-  listComments();
-})
 </script>
 
 <style scoped>

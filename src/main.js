@@ -2,10 +2,11 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import axios from "axios";
+import qs from "qs"
 
 import 'element-plus/theme-chalk/dark/css-vars.css'
 
-axios.defaults.baseURL = 'http://127.0.0.1:8090'
+axios.defaults.baseURL = 'http://127.0.0.1:8083/milimili'
 
 const app = createApp(App)
 
@@ -14,6 +15,7 @@ window.addEventListener('beforeunload', () => {
     // 清空 localStorage
     localStorage.clear();
 });
+app.provide('$qs',qs)
 
 app.use(router)
 

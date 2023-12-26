@@ -8,10 +8,9 @@
           <time class="message-time">{{ message.msgSendDate }}</time>
           <p class="message-detail">{{ message.msgContext }}</p>
         </div>
-        <button class="message-read">已读</button>
-        <button class="message-delete" @click="deleteMessage(index)">
-          <span class="glyphicon glyphicon-remove"></span>
-        </button>
+        <button v-show="message.msgState.stateId===6" class="message-read" @click="read(message)">未读</button>
+        <button v-show="message.msgState.stateId===7" class="message-read">已读</button>
+        <button class="message-delete" @click="deleteMessage(message)">删除</button>
       </li>
     </ul>
   </section>
@@ -42,9 +41,26 @@ const getMessages=()=>{
     console.log(error.message);
   })
 }
-const deleteMessage = (index) => {
-  Messages.value.splice(index, 1);
-};
+//读消息
+const read=(message)=>{
+  axios.post(`/message/readMsg/${message.msgId}`,{msgId:message.msgId}).then(res=>{
+    console.log('已读')
+    getMessages()
+  }
+  ).catch(error=>{
+    console.log(error.message)
+  })
+}
+//删除消息
+const deleteMessage=(message)=>{
+  axios.post(`/message/delMsgById/${message.msgId}`,{msgId:message.msgId}).then(res=>{
+        console.log('删除')
+        getMessages()
+      }
+  ).catch(error=>{
+    console.log(error.message)
+  })
+}
 
 onMounted(()=>{
   getMessages();
